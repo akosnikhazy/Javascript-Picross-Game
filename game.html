@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=utf-8>
+	<title>Picross Javascript</title>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<script>
+$(document).ready(function()
+{
+	
+	$("#game,#win").hide();
+	
+	//It uses a simple array as level. For the interface I put the level arrays in an array.
+	var levels 	= Array(
+		//the test
+		//Array(1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1),
+		
+		//the dunno what
+		Array(1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,0,0,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1),
+		//the smile
+		Array(0,0,0,1,1,1,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,1,0,1,0,1,0,1,0,0,1,0,1,0,0,1,0,0,1,1,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,0,0,0),
+		//the house
+		Array(0,1,1,0,1,1,0,0,0,0,0,1,1,1,0,0,1,0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,1,0,0,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,1,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0,1,0,0,1,0,0,1,1,0,0,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1),
+		
+		//the custom level. If you add more levels, you have to change the button too now its exepts levels[3] for custom level array
+		Array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+		
+	)
+	
+	var level = 0;
+	
+	//this player fills this
+	var currentGame = Array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+	var gameIsOn	= false;
+	var win = false;
+	
+	function checkForWin()
+	{
+		
+		var is_same = (levels[level].length == currentGame.length) && levels[level].every(function(element, index) {
+			return element ===currentGame[index]; 
+		});
+		
+		if(is_same){
+			console.log('win');
+			win = true;
+			gameIsOn = false;
+			
+		}
+		else
+		{
+			console.log('fail');
+		}
+		
+		if(win)
+		{
+			$("#win").show();
+		}
+	}
+	
+	function setCurrentGame()
+	{
+		$(".pixel" ).each(function( i ) {
+			var classList = $(this).attr('class').split(/\s+/);
+			var position = classList[1].split('_');
+		
+			var zeroOrOne = (classList[2] === undefined)?0:1;
+			
+			currentGame[parseInt(position[0])*10 + parseInt(position[1])] = zeroOrOne;
+			
+			
+		});
+		
+		console.log(currentGame);
+		checkForWin();
+	}
+	
+	function resetGame(){
+		location.reload();
+		
+	}
+	
+	function iniGame(selectedLevel)
+	{
+		
+		
+		//win is false, game is on
+		gameIsOn	= true;
+		win 		= false;
+		level		= selectedLevel;
+		//set up helps based on level
+		
+		$("#hideThis").hide();
+		
+		var countX 		= 0;
+		var countY		= 0;
+		
+		//at 10x10 picross there can not be more than 5 helps. Because the biggest pattern is 1x1x1x1x1x
+		
+		//This array structure represents the 5 possible helps at every row and every column.
+		//Inner array: Array(last value, array of helps pointer, array of helps(5))
+		var helpColumnNumbers = Array(
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0))
+		);
+		//Inner array: last value, array of helps pointer, array of helps
+		var helpRowNumbers = Array(
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0)),
+			Array(0,0,Array(0,0,0,0,0))
+		);
+		//columns
+		
+			
+			for(index = 0;index<levels[selectedLevel].length;index++)
+			{//loop through the level array
+				
+				if(levels[selectedLevel][index] == 1)
+				{//if it is a pixel (value 1) we add it to the inner array
+				
+					helpColumnNumbers[countX][2][helpColumnNumbers[countX][1]]++;
+					
+					helpRowNumbers[countY][2][helpRowNumbers[countY][1]]++
+				
+				}
+				else
+				{//if it is not a pixel (value 0) we close the count (if we counted) and set the pointers to the next array element
+				
+					if(helpColumnNumbers[countX][0] == 1)
+					{//close column, start new count, set pointer to the next array element
+						helpColumnNumbers[countX][1]++;
+					}
+					
+					if(helpRowNumbers[countY][0] == 1)
+					{
+						helpRowNumbers[countY][1]++;
+					}
+					
+				
+				}
+				
+				helpColumnNumbers[countX][0] = 	helpRowNumbers[countY][0] = levels[selectedLevel][index];
+				
+				countX++;
+				
+				
+				//next row
+				if(countX > 9)
+				{
+					countX = 0;
+					countY++;
+				}
+			} //end of for
+			
+			//"Draw" help numbers
+				//oh the irony: we use row at coulumns and columns at rows.
+				var row 	= 4;
+				var column = 4
+				//help columns
+				for(i = 0;i < 10;i++)
+				{//loop through helpColumnNumbers
+					
+					for(j = 4;j>=0;j--)
+					{//loop through given column, we go backwards so we can draw it properly from bottom to top
+						
+						if(helpColumnNumbers[i][2][j] == 0)
+						{
+							continue;
+						} 
+						else
+						{
+							$("#helpTopContainerTop ."+row+"_"+i).html(helpColumnNumbers[i][2][j]);
+                             row--;						
+						}
+						
+					}
+					
+					row = 4;
+				
+				}
+				
+				for(i = 0;i < 10;i++)
+				{//loop through helpRowNumbers
+					
+					for(j = 4;j>=0;j--)
+					{//loop through given row, we go backwards so we can draw it properly from bottom to top
+						
+						if(helpRowNumbers[i][2][j] == 0)
+						{
+							continue;
+						} 
+						else
+						{
+							$(".helpLeftContainer ."+i+"_"+column).html(helpRowNumbers[i][2][j]);
+                            column--;						
+						}
+						
+					}
+					
+					column = 4;
+				
+				}
+				$("#game").show(500);
+			
+			
+			console.log(helpColumnNumbers);
+			console.log(helpRowNumbers);
+			
+			
+	}//end of iniGame
+	
+	//controls
+	$(".pixel").click(function(){
+		if(gameIsOn)
+		{
+			if($(this).hasClass('black'))
+				$(this).removeClass('black');
+			else
+				$(this).addClass('black');
+		
+			setCurrentGame();
+		}
+	});
+	
+	$("#startSelect").click(function(){
+	
+		if($("#level").val() > -1 && $("#level").val() < 3){
+			iniGame($("#level").val());
+		}
+	});
+	
+	$("#startCustom").click(function(){
+	
+		var numbers = $("textarea").val().split(",");
+		console.log(numbers);
+		for(i =0;i<100;i++)
+		{//user can put anything in, the worst case: he gets a lot of 0s
+			if(numbers[i] === undefined || parseInt(numbers[i]) != 1)
+			{
+				levels[3][i] = 0;
+			} else {
+			
+				levels[3][i] = 1;
+			}
+		}
+		iniGame(3);
+		
+	});
+	
+	$("#resetGame").click(function(){
+		resetGame();
+	});
+	
+	
+});
+</script>
+<style>
+html,body{margin:0;padding:0;}
+html{font-family:arial;}
+a{color:#555}
+#game{
+	width:100%;
+	overflow:auto;
+	background: #efefef;
+
+}
+#helpTopContainerTop{
+	width: 450px;
+	margin: 0 auto;
+	overflow: auto;
+	padding-left:210px;
+}
+#pixelContainer{
+	width: 650px;
+	margin: 0 auto;
+}
+#win{
+	width:100%;
+	background: green;
+	color: #fefefe;
+	text-align:center;
+	font-size:2em;
+	padding:10px;
+
+}
+.pixel, .helpTop, .helpLeft{
+	width: 39px;
+	height:39px;
+	float:left;
+	border:1px solid #777;
+}
+.pixel{
+	cursor:pointer;
+}
+.helpLeftContainer{float:left;overflow:auto;}
+.helpTop,.helpLeft{
+	text-align:center;
+	line-height: 1.5em;
+	font-size:1.4em;
+	font-weight:bold;
+	border: 1px solid transparent;
+}
+
+.black{background:#101010}
+.explain{color: #666;font-size:0.7em}
+</style>
+<body>
+	<div id="controls">
+		<div id="hideThis">
+			<select id="level">
+				<optgroup label="Levels">
+					<option value"-1">Select a level</option>
+					<option value="0">The dunno what</option>
+					<option value="1">The Smile</option>
+					<option value="2">The House</option>
+				</optgroup>
+			</select> <button id="startSelect">Start</button>
+						 
+			<br>OR<br>
+			<div id="custom">
+			
+				Custom level code: <br><textarea></textarea> <span class="explain">You can type in hundred 0 or 1 seperated by comma like this 0,0,1,1,0.... or you can use <a href="https://drive.google.com/file/d/0B2J_ZVYjh5dWWFFmMjYyd1gzS3M/view?usp=sharing">this editor</a> and copy the numbers from there. The editor is open source. You can check it out <a href="https://github.com/thenakos/picross-level-editor">here</a>.</span>
+				<br>
+				<button id="startCustom">Start</button>
+			</div>
+		</div>
+		<button id="resetGame">Reset Game</button>
+	</div>
+	<div id="win">WIN!</div>
+	<div id="game">
+		<div id="helpTopContainerTop">
+			<div class="helpTop 0_0"></div><div class="helpTop 0_1"></div><div class="helpTop 0_2"></div><div class="helpTop 0_3"></div><div class="helpTop 0_4"></div><div class="helpTop 0_5"></div><div class="helpTop 0_6"></div><div class="helpTop 0_7"></div><div class="helpTop 0_8"></div><div class="helpTop 0_9"></div>
+			<div class="helpTop 1_0"></div><div class="helpTop 1_1"></div><div class="helpTop 1_2"></div><div class="helpTop 1_3"></div><div class="helpTop 1_4"></div><div class="helpTop 1_5"></div><div class="helpTop 1_6"></div><div class="helpTop 1_7"></div><div class="helpTop 1_8"></div><div class="helpTop 1_9"></div>
+			<div class="helpTop 2_0"></div><div class="helpTop 2_1"></div><div class="helpTop 2_2"></div><div class="helpTop 2_3"></div><div class="helpTop 2_4"></div><div class="helpTop 2_5"></div><div class="helpTop 2_6"></div><div class="helpTop 2_7"></div><div class="helpTop 2_8"></div><div class="helpTop 2_9"></div>
+			<div class="helpTop 3_0"></div><div class="helpTop 3_1"></div><div class="helpTop 3_2"></div><div class="helpTop 3_3"></div><div class="helpTop 3_4"></div><div class="helpTop 3_5"></div><div class="helpTop 3_6"></div><div class="helpTop 3_7"></div><div class="helpTop 3_8"></div><div class="helpTop 3_9"></div>
+			<div class="helpTop 4_0"></div><div class="helpTop 4_1"></div><div class="helpTop 4_2"></div><div class="helpTop 4_3"></div><div class="helpTop 4_4"></div><div class="helpTop 4_5"></div><div class="helpTop 4_6"></div><div class="helpTop 4_7"></div><div class="helpTop 4_8"></div><div class="helpTop 4_9"></div>
+
+		</div>
+
+		<div id="pixelContainer">
+			
+			<div class="helpLeftContainer"><div class="helpLeft 0_0"></div><div class="helpLeft 0_1"></div><div class="helpLeft 0_2"></div><div class="helpLeft 0_3"></div><div class="helpLeft 0_4"></div></div><div class="pixel 0_0"></div><div class="pixel 0_1"></div><div class="pixel 0_2"></div><div class="pixel 0_3"></div><div class="pixel 0_4"></div><div class="pixel 0_5"></div><div class="pixel 0_6"></div><div class="pixel 0_7"></div><div class="pixel 0_8"></div><div class="pixel 0_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 1_0"></div><div class="helpLeft 1_1"></div><div class="helpLeft 1_2"></div><div class="helpLeft 1_3"></div><div class="helpLeft 1_4"></div></div><div class="pixel 1_0"></div><div class="pixel 1_1"></div><div class="pixel 1_2"></div><div class="pixel 1_3"></div><div class="pixel 1_4"></div><div class="pixel 1_5"></div><div class="pixel 1_6"></div><div class="pixel 1_7"></div><div class="pixel 1_8"></div><div class="pixel 1_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 2_0"></div><div class="helpLeft 2_1"></div><div class="helpLeft 2_2"></div><div class="helpLeft 2_3"></div><div class="helpLeft 2_4"></div></div><div class="pixel 2_0"></div><div class="pixel 2_1"></div><div class="pixel 2_2"></div><div class="pixel 2_3"></div><div class="pixel 2_4"></div><div class="pixel 2_5"></div><div class="pixel 2_6"></div><div class="pixel 2_7"></div><div class="pixel 2_8"></div><div class="pixel 2_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 3_0"></div><div class="helpLeft 3_1"></div><div class="helpLeft 3_2"></div><div class="helpLeft 3_3"></div><div class="helpLeft 3_4"></div></div><div class="pixel 3_0"></div><div class="pixel 3_1"></div><div class="pixel 3_2"></div><div class="pixel 3_3"></div><div class="pixel 3_4"></div><div class="pixel 3_5"></div><div class="pixel 3_6"></div><div class="pixel 3_7"></div><div class="pixel 3_8"></div><div class="pixel 3_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 4_0"></div><div class="helpLeft 4_1"></div><div class="helpLeft 4_2"></div><div class="helpLeft 4_3"></div><div class="helpLeft 4_4"></div></div><div class="pixel 4_0"></div><div class="pixel 4_1"></div><div class="pixel 4_2"></div><div class="pixel 4_3"></div><div class="pixel 4_4"></div><div class="pixel 4_5"></div><div class="pixel 4_6"></div><div class="pixel 4_7"></div><div class="pixel 4_8"></div><div class="pixel 4_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 5_0"></div><div class="helpLeft 5_1"></div><div class="helpLeft 5_2"></div><div class="helpLeft 5_3"></div><div class="helpLeft 5_4"></div></div><div class="pixel 5_0"></div><div class="pixel 5_1"></div><div class="pixel 5_2"></div><div class="pixel 5_3"></div><div class="pixel 5_4"></div><div class="pixel 5_5"></div><div class="pixel 5_6"></div><div class="pixel 5_7"></div><div class="pixel 5_8"></div><div class="pixel 5_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 6_0"></div><div class="helpLeft 6_1"></div><div class="helpLeft 6_2"></div><div class="helpLeft 6_3"></div><div class="helpLeft 6_4"></div></div><div class="pixel 6_0"></div><div class="pixel 6_1"></div><div class="pixel 6_2"></div><div class="pixel 6_3"></div><div class="pixel 6_4"></div><div class="pixel 6_5"></div><div class="pixel 6_6"></div><div class="pixel 6_7"></div><div class="pixel 6_8"></div><div class="pixel 6_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 7_0"></div><div class="helpLeft 7_1"></div><div class="helpLeft 7_2"></div><div class="helpLeft 7_3"></div><div class="helpLeft 7_4"></div></div><div class="pixel 7_0"></div><div class="pixel 7_1"></div><div class="pixel 7_2"></div><div class="pixel 7_3"></div><div class="pixel 7_4"></div><div class="pixel 7_5"></div><div class="pixel 7_6"></div><div class="pixel 7_7"></div><div class="pixel 7_8"></div><div class="pixel 7_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 8_0"></div><div class="helpLeft 8_1"></div><div class="helpLeft 8_2"></div><div class="helpLeft 8_3"></div><div class="helpLeft 8_4"></div></div><div class="pixel 8_0"></div><div class="pixel 8_1"></div><div class="pixel 8_2"></div><div class="pixel 8_3"></div><div class="pixel 8_4"></div><div class="pixel 8_5"></div><div class="pixel 8_6"></div><div class="pixel 8_7"></div><div class="pixel 8_8"></div><div class="pixel 8_9"></div>
+			<div class="helpLeftContainer"><div class="helpLeft 9_0"></div><div class="helpLeft 9_1"></div><div class="helpLeft 9_2"></div><div class="helpLeft 9_3"></div><div class="helpLeft 9_4"></div></div><div class="pixel 9_0"></div><div class="pixel 9_1"></div><div class="pixel 9_2"></div><div class="pixel 9_3"></div><div class="pixel 9_4"></div><div class="pixel 9_5"></div><div class="pixel 9_6"></div><div class="pixel 9_7"></div><div class="pixel 9_8"></div><div class="pixel 9_9"></div>
+
+	
+		</div>
+	</div>
+	<div id="footer">
+	  <span class="explain">Rules: every column and every row have the same number of pixels in it, in the same order as the numbers describe at the top and the left. You win when all pixels are on their place. <a href="https://en.wikipedia.org/wiki/Nonogram">This wikipedia article</a> might help to understand it better. I created it in jQuery so it was faster to make. The important part of the code is pure js anyway. If there is any bugs: I don't care, this was a weekend project and that weekend ended. Feel free to use the code, but do not forget to credit me. Created by Ákos Nikházy.</span>
+	</div>
+</body>
+</html>
